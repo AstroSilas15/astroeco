@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "astroeco",
+  "version": "${version}",
+  "name": "Astro Economy",
+  "description": "Eigene Wirtschafts-Mod fuer den Astro-Server: Geld, /pay, Shop und Verkaufsfenster.",
+  "authors": ["AstroSilas"],
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "main": ["net.astro.eco.AstroEconomy"]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "fabric-api": "*"
+  }
+}
