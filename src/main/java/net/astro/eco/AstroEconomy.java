@@ -87,7 +87,7 @@ public class AstroEconomy implements ModInitializer {
             .append(Component.literal(Integer.toString(deaths)).withStyle(ChatFormatting.RED))
             .append(Component.literal("   Online ").withStyle(ChatFormatting.GRAY))
             .append(Component.literal(Integer.toString(server.getPlayerCount())).withStyle(ChatFormatting.AQUA));
-        p.displayClientMessage(line, true);
+        p.sendSystemMessage(line, true);
     }
 
     private static void copyDefault(String resource, Path target) throws Exception {

@@ -2,16 +2,19 @@ package net.astro.eco;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
@@ -64,9 +67,21 @@ public final class GuiMenus {
     }
 
     private static ItemStack filler() {
-        ItemStack s = new ItemStack(Items.GRAY_STAINED_GLASS_PANE);
+        Item pane = BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath("minecraft", "gray_stained_glass_pane"));
+        if (pane == Items.AIR) pane = Items.ARROW;
+        ItemStack s = new ItemStack(pane);
         s.set(DataComponents.CUSTOM_NAME, plain(" ", ChatFormatting.GRAY));
         return s;
+    }
+
+    /** Gibt dem Spieler das Item; was nicht ins Inventar passt, faellt vor ihm auf den Boden. */
+    static void giveOrDrop(Player player, ItemStack stack) {
+        if (stack.isEmpty()) return;
+        if (player.getInventory().add(stack)) return;
+        if (stack.isEmpty()) return;
+        ItemEntity drop = new ItemEntity(player.level(), player.getX(), player.getEyeY() - 0.3, player.getZ(), stack);
+        drop.setPickUpDelay(10);
+        player.level().addFreshEntity(drop);
     }
 
     private static void msg(ServerPlayer p, String text, ChatFormatting color) {
@@ -85,7 +100,7 @@ public final class GuiMenus {
         }
 
         @Override
-        public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        public void clicked(int slotId, int button, ContainerInput input, Player player) {
             if (slotId >= 0 && slotId < rows * 9 && player instanceof ServerPlayer sp) {
                 onClick.accept(slotId, sp);
             }
@@ -150,9 +165,7 @@ public final class GuiMenus {
         }
         eco.add(sp.getUUID(), -o.price());
         ItemStack stack = new ItemStack(o.item(), o.count());
-        if (!sp.getInventory().add(stack)) {
-            sp.drop(stack, false);
-        }
+        giveOrDrop(sp, stack);
         msg(sp, "Gekauft: " + o.label() + " fuer $" + Money.format(o.price()) + ".", ChatFormatting.GREEN);
     }
 
@@ -168,13 +181,13 @@ public final class GuiMenus {
         }
 
         @Override
-        public void clicked(int slotId, int button, ClickType clickType, Player player) {
+        public void clicked(int slotId, int button, ContainerInput input, Player player) {
             if (slotId == BUTTON) {
                 if (player instanceof ServerPlayer sp) sell(sp);
                 this.sendAllDataToRemote();
                 return;
             }
-            super.clicked(slotId, button, clickType, player);
+            super.clicked(slotId, button, input, player);
         }
 
         @Override
@@ -217,9 +230,7 @@ public final class GuiMenus {
             // alles, was nicht verkauft wurde, geht zurueck an den Spieler
             for (int i = 0; i < BUTTON; i++) {
                 ItemStack s = box.removeItemNoUpdate(i);
-                if (!s.isEmpty()) {
-                    player.getInventory().placeItemBackInInventory(s);
-                }
+                giveOrDrop(player, s);
             }
         }
     }

@@ -22,7 +22,7 @@ public final class EcoCommands {
     /** Admins: Spieler mit dem Tag "eco_admin" (oder die Konsole). */
     private static boolean isAdmin(CommandSourceStack src) {
         ServerPlayer p = src.getPlayer();
-        return p == null || p.getTags().contains("eco_admin");
+        return p == null || p.entityTags().contains("eco_admin");
     }
 
     public static void register(CommandDispatcher<CommandSourceStack> d) {
